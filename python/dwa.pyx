@@ -102,7 +102,7 @@ cdef class Config:
                   float max_yawrate, float max_accel, float max_dyawrate,
                   float velocity_resolution, float yawrate_resolution, float dt,
                   float predict_time, float heading, float clearance, float velocity,
-                  list base):
+                  list base, float saturation):
 
         self.thisptr = <cdwa.Config*>malloc(sizeof(cdwa.Config))
         self.thisptr.maxSpeed = max_speed
@@ -115,6 +115,7 @@ cdef class Config:
         self.thisptr.dt = dt
         self.thisptr.predictTime = predict_time
         self.thisptr.heading = heading
+        self.thisptr.saturation = saturation
         self.thisptr.clearance = clearance
         self.thisptr.velocity = velocity
         self.thisptr.base.xmin = base[0]
@@ -207,6 +208,14 @@ cdef class Config:
         def __set__(self, value):
             assert self.thisptr is not NULL
             self.thisptr.heading = value
+    
+    property saturation:
+        def __get__(self):
+            assert self.thisptr is not NULL
+            return self.thisptr.saturation
+        def __set__(self, value):
+            assert self.thisptr is not NULL
+            self.thisptr.saturation = value
 
     property clearance:
         def __get__(self):
@@ -235,6 +244,7 @@ cdef class Config:
         string = f'{string}\ndt                     {self.thisptr.dt}'
         string = f'{string}\npredictTime            {self.thisptr.predictTime}'
         string = f'{string}\nheading                {self.thisptr.heading}'
+        string = f'{string}\nsaturation                {self.thisptr.saturation}'
         string = f'{string}\nclearance              {self.thisptr.clearance}'
         string = f'{string}\nvelocity               {self.thisptr.velocity}'
         string = f'{string}\nbase.xtop              {self.thisptr.base.xtop}'
@@ -321,6 +331,18 @@ def calculate_clearance_cost(tuple pose, tuple velocity,
     cdef Pose _pose = Pose(Point(x, y), yaw)
     cdef Velocity _velocity = Velocity(v, w)
     return cdwa.calculateClearanceCost(_pose.thisptr[0], _velocity.thisptr[0],
+                                       _point_cloud.thisptr, config.thisptr[0])
+
+def calculate_saturation_cost(tuple pose, tuple velocity,
+                             np.ndarray[np.float32_t, ndim=2] point_cloud,
+                             Config config):
+    cdef float x, y, yaw, v , w
+    cdef PointCloud _point_cloud = PointCloud(point_cloud)
+    x, y, yaw = pose
+    v, w = velocity
+    cdef Pose _pose = Pose(Point(x, y), yaw)
+    cdef Velocity _velocity = Velocity(v, w)
+    return cdwa.calculateSaturationCost(_pose.thisptr[0], _velocity.thisptr[0],
                                        _point_cloud.thisptr, config.thisptr[0])
 
 def motion(tuple pose, tuple velocity, float dt):

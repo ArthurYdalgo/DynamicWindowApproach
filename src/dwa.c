@@ -103,6 +103,42 @@ calculateClearanceCost
   return 1.0 / minr;
 }
 
+float
+calculateSaturationCost
+(Pose pose, Velocity velocity, PointCloud *pointCloud, Config config) {
+  Pose pPose = pose;
+  float time = 0.0;
+  float minr = FLT_MAX;
+  float r;
+  float dx;
+  float dy;
+
+  float x;
+  float y;
+
+  while (time < config.predictTime) {
+    pPose = motion(pPose, velocity, config.dt);
+      
+    for(int i = 0; i < pointCloud->size; ++i) {
+      dx = pPose.point.x - pointCloud->points[i].x;
+      dy = pPose.point.y - pointCloud->points[i].y;
+      x = -dx * cos(pPose.yaw) + -dy * sin(pPose.yaw);
+      y = -dx * -sin(pPose.yaw) + -dy * cos(pPose.yaw);
+      if (x <= config.base.xmax &&
+          x >= config.base.xmin &&
+          y <= config.base.ymax &&
+          y >= config.base.ymin){
+        return FLT_MAX;
+      }
+      r = sqrtf(dx*dx + dy*dy);
+      if (r < minr)
+        minr = r;
+    }
+    time += config.dt;
+  }
+  return 1.0 / minr;
+}
+
 Velocity
 planning(Pose pose, Velocity velocity, Point goal,
          PointCloud *pointCloud, Config config) {
@@ -122,6 +158,8 @@ planning(Pose pose, Velocity velocity, Point goal,
       cost = 
         config.velocity * calculateVelocityCost(pVelocity, config) +
         config.heading * calculateHeadingCost(pPose, goal) +
+        config.saturation * calculateSaturationCost(pose, pVelocity,
+                                                  pointCloud, config) +
         config.clearance * calculateClearanceCost(pose, pVelocity,
                                                   pointCloud, config);
       if (cost < total_cost) {

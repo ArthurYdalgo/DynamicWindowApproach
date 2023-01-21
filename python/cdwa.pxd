@@ -15,6 +15,7 @@ cdef extern from "dwa.h":
         float dt
         float predictTime
         float heading
+        float saturation
         float clearance
         float velocity
         Rect base
@@ -47,5 +48,6 @@ cdef extern from "dwa.h":
         Velocity velocity, Config config, DynamicWindow **dynamicWindow);
     float calculateVelocityCost(Velocity velocity, Config config);
     float calculateHeadingCost(Pose pose, Point goal);
+    float calculateSaturationCost(Pose pose, Velocity velocity, PointCloud *saturationCloud, Config config);
     float calculateClearanceCost(
         Pose pose, Velocity velocity, PointCloud *pointCloud, Config config);

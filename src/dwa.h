@@ -35,6 +35,7 @@ typedef struct {
   float dt;
   float predictTime;
   float heading;
+  float saturation;
   float clearance;
   float velocity;
   Rect base;
@@ -74,6 +75,9 @@ float calculateVelocityCost(Velocity velocity, Config config);
 float calculateHeadingCost(Pose pose, Point goal);
 float
 calculateClearanceCost
+(Pose pose, Velocity velocity, PointCloud *pointCloud, Config config);
+float
+calculateSaturationCost
 (Pose pose, Velocity velocity, PointCloud *pointCloud, Config config);
 Velocity
 planning

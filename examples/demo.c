@@ -100,6 +100,7 @@ int main() {
   config.velocityResolution = 0.1;
   config.yawrateResolution = 1.0 * M_PI / 180.0;
   config.dt = 0.1;
+  config.saturation = 0.7;
   config.predictTime = 3.0;
   config.heading = 0.15;
   config.clearance = 1.0;
