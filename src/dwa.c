@@ -47,6 +47,18 @@ void freePointCloud(PointCloud* pointCloud){
   free(pointCloud);
 }
 
+SaturationPointCloud* createSaturationPointCloud(int size){
+  SaturationPointCloud* saturationPointCloud = malloc(sizeof(SaturationPointCloud));
+  saturationPointCloud->saturationPoints = malloc(size * sizeof(SaturationPoint));
+  saturationPointCloud->size = size;
+  return saturationPointCloud;
+}
+
+void freeSaturationPointCloud(SaturationPointCloud* saturationPointCloud){
+  free(saturationPointCloud->saturationPoints);
+  free(saturationPointCloud);
+}
+
 Pose motion(Pose pose, Velocity velocity, float dt){
   Pose new_pose;
   new_pose.yaw = pose.yaw + velocity.angularVelocity * dt;
@@ -105,7 +117,7 @@ calculateClearanceCost
 
 float
 calculateSaturationCost
-(Pose pose, Velocity velocity, PointCloud *saturationCloud, Config config) {
+(Pose pose, Velocity velocity, SaturationPointCloud *saturationCloud, Config config) {
   Pose pPose = pose;
   float time = 0.0;
   float minr = FLT_MAX;
@@ -115,14 +127,15 @@ calculateSaturationCost
 
   float x;
   float y;
+  float saturation;
 
   while (time < config.predictTime) {
     pPose = motion(pPose, velocity, config.dt);
       
     for(int i = 0; i < saturationCloud->size; ++i) {
-      dx = pPose.point.x - saturationCloud->points[i].x;
-      dy = pPose.point.y - saturationCloud->points[i].y;
-      saturation = saturationCloud->points[i].s;
+      dx = pPose.point.x - saturationCloud->saturationPoints[i].x;
+      dy = pPose.point.y - saturationCloud->saturationPoints[i].y;
+      saturation = saturationCloud->saturationPoints[i].saturation;
       x = -dx * cos(pPose.yaw) + -dy * sin(pPose.yaw);
       y = -dx * -sin(pPose.yaw) + -dy * cos(pPose.yaw);
       // if (x <= config.base.xmax &&
@@ -142,7 +155,7 @@ calculateSaturationCost
 
 Velocity
 planning(Pose pose, Velocity velocity, Point goal,
-         PointCloud *pointCloud, Config config, PointCloud *saturationCloud) {
+         PointCloud *pointCloud, Config config, SaturationPointCloud *saturationCloud) {
   DynamicWindow *dw;
   createDynamicWindow(velocity, config, &dw);
   Velocity pVelocity;

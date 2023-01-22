@@ -273,6 +273,28 @@ cdef class PointCloud:
         if self.thisptr is not NULL:
             cdwa.freePointCloud(self.thisptr)
 
+cdef class SaturationPointCloud:
+    cdef cdwa.SaturationPointCloud* thisptr
+
+    def __cinit__(self, np.ndarray[np.float32_t, ndim=3] saturation_point_cloud):
+        cdef int size = len(saturation_point_cloud)
+        self.thisptr = <cdwa.SaturationPointCloud*>cdwa.createSaturationPointCloud(size)
+        self.thisptr.size = size
+        cdef float x
+        cdef float y
+        cdef float saturation
+        for i in range(size):
+            x, y, saturation = saturation_point_cloud[i]
+            self.thisptr.saturationPoints[i].x = x
+            self.thisptr.saturationPoints[i].y = y
+            self.thisptr.saturationPoints[i].saturation = saturation
+        if self.thisptr is NULL:
+            raise MemoryError
+
+    def __dealloc__(self):
+        if self.thisptr is not NULL:
+            cdwa.freeSaturationPointCloud(self.thisptr)
+
 cdef class DynamicWindow:
     cdef cdwa.DynamicWindow* thisptr
 
@@ -334,16 +356,16 @@ def calculate_clearance_cost(tuple pose, tuple velocity,
                                        _point_cloud.thisptr, config.thisptr[0])
 
 def calculate_saturation_cost(tuple pose, tuple velocity,
-                             np.ndarray[np.float32_t, ndim=2] point_cloud,
+                             np.ndarray[np.float32_t, ndim=3] saturation_point_cloud,
                              Config config):
     cdef float x, y, yaw, v , w
-    cdef PointCloud _point_cloud = PointCloud(point_cloud)
+    cdef SaturationPointCloud _saturation_point_cloud = SaturationPointCloud(saturation_point_cloud)
     x, y, yaw = pose
     v, w = velocity
     cdef Pose _pose = Pose(Point(x, y), yaw)
     cdef Velocity _velocity = Velocity(v, w)
     return cdwa.calculateSaturationCost(_pose.thisptr[0], _velocity.thisptr[0],
-                                       _point_cloud.thisptr, config.thisptr[0])
+                                       _saturation_point_cloud.thisptr, config.thisptr[0])
 
 def motion(tuple pose, tuple velocity, float dt):
     cdef float x, y, yaw, v , w
@@ -361,7 +383,7 @@ def planning(tuple pose, tuple velocity, tuple goal,
 
     cdef float x, y, yaw, v , w, gx, gy
     cdef PointCloud _point_cloud = PointCloud(point_cloud)
-    cdef PointCloud _saturation_cloud = PointCloud(saturation_cloud)
+    cdef SaturationPointCloud _saturation_cloud = SaturationPointCloud(saturation_cloud)
     x, y, yaw = pose
     v, w = velocity
     gx, gy = goal

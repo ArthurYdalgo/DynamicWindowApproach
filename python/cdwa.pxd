@@ -22,6 +22,13 @@ cdef extern from "dwa.h":
     ctypedef struct Point:
         float x
         float y
+    ctypedef struct SaturationPoint:
+        float x
+        float y
+        float saturation
+    ctypedef struct SaturationPointCloud:
+        int size;
+        SaturationPoint *saturationPoints;
     ctypedef struct PointCloud:
         int size;
         Point *points;
@@ -40,14 +47,16 @@ cdef extern from "dwa.h":
     Pose motion(Pose pose, Velocity velocity, float dt);
     Velocity planning(
         Pose pose, Velocity velocity, Point goal,
-        PointCloud *pointCloud, Config config, PointCloud *saturationCloud);
+        PointCloud *pointCloud, Config config, SaturationPointCloud *saturationCloud);
     PointCloud* createPointCloud(int size);
     void freePointCloud(PointCloud* pointCloud);
+    SaturationPointCloud* createSaturationPointCloud(int size);
+    void freeSaturationPointCloud(SaturationPointCloud* saturationPointCloud);
     void freeDynamicWindow(DynamicWindow *dynamicWindow);
     void createDynamicWindow(
         Velocity velocity, Config config, DynamicWindow **dynamicWindow);
     float calculateVelocityCost(Velocity velocity, Config config);
     float calculateHeadingCost(Pose pose, Point goal);
-    float calculateSaturationCost(Pose pose, Velocity velocity, PointCloud *saturationCloud, Config config);
+    float calculateSaturationCost(Pose pose, Velocity velocity, SaturationPointCloud *saturationCloud, Config config);
     float calculateClearanceCost(
         Pose pose, Velocity velocity, PointCloud *pointCloud, Config config);

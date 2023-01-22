@@ -57,6 +57,17 @@ typedef struct {
 } PointCloud;
 
 typedef struct {
+  float x;
+  float y;
+  float saturation;
+} SaturationPoint;
+
+typedef struct {
+  int size;
+  SaturationPoint *saturationPoints;
+} SaturationPointCloud;
+
+typedef struct {
   Point point;
   float yaw;
 } Pose;
@@ -78,10 +89,12 @@ calculateClearanceCost
 (Pose pose, Velocity velocity, PointCloud *pointCloud, Config config);
 float
 calculateSaturationCost
-(Pose pose, Velocity velocity, PointCloud *saturationCloud, Config config);
+(Pose pose, Velocity velocity, SaturationPointCloud *saturationCloud, Config config);
 Velocity
 planning
-(Pose pose, Velocity velocity, Point goal, PointCloud *pointCloud, Config config, PointCloud *saturationCloud);
+(Pose pose, Velocity velocity, Point goal, PointCloud *pointCloud, Config config, SaturationPointCloud *saturationCloud);
 PointCloud* createPointCloud(int size);
 void freePointCloud(PointCloud* pointCloud);
+SaturationPointCloud* createSaturationPointCloud(int size);
+void freeSaturationPointCloud(SaturationPointCloud* saturationPointCloud);
 void freeDynamicWindow(DynamicWindow *dynamicWindow);
