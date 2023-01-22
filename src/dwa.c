@@ -136,7 +136,7 @@ calculateSaturationCost
       dx = pPose.point.x - saturationCloud->saturationPoints[i].x;
       dy = pPose.point.y - saturationCloud->saturationPoints[i].y;
       saturation = saturationCloud->saturationPoints[i].saturation;
-      
+
       r = sqrtf(dx*dx + dy*dy);
       
       if (r < minr){
@@ -148,7 +148,6 @@ calculateSaturationCost
     time += config.dt;
   }
   return closest_saturation * ((config.saturationMaxRadius - minr)/config.saturationMaxRadius);
-  // return 1.0 / minr;
 }
 
 void * threadedPlanning(void * input){
