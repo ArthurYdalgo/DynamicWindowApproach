@@ -102,6 +102,7 @@ int main() {
   config.dt = 0.1;
   config.saturation = 0.7;
   config.predictTime = 3.0;
+  config.saturationMaxRadius = 10.0;
   config.heading = 0.15;
   config.clearance = 1.0;
   config.velocity = 1.0;

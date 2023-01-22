@@ -120,14 +120,18 @@ calculateSaturationCost
 (Pose pose, Velocity velocity, SaturationPointCloud *saturationCloud, Config config) {
   Pose pPose = pose;
   float time = 0.0;
-  float minr = FLT_MAX;
-  float r;
+  float minr = config.saturationMaxRadius;
+  float closest_saturation = 0;
   float dx;
+  float r;
   float dy;
 
   float x;
   float y;
   float saturation;
+
+  float basex = config.base.xmax - config.base.xmin;
+  float basey = config.base.ymax - config.base.ymin;
 
   while (time < config.predictTime) {
     pPose = motion(pPose, velocity, config.dt);
@@ -145,12 +149,17 @@ calculateSaturationCost
       //   return FLT_MAX;
       // }
       r = sqrtf(dx*dx + dy*dy);
-      if (r < minr)
+      
+      if (r < minr){
         minr = r;
+        closest_saturation = saturation;
+      }
+        
     }
     time += config.dt;
   }
-  return 1.0 / minr;
+  return closest_saturation / minr;
+  // return 1.0 / minr;
 }
 
 Velocity

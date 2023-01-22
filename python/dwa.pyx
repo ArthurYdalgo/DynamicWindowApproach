@@ -102,7 +102,7 @@ cdef class Config:
                   float max_yawrate, float max_accel, float max_dyawrate,
                   float velocity_resolution, float yawrate_resolution, float dt,
                   float predict_time, float heading, float clearance, float velocity,
-                  list base, float saturation):
+                  list base, float saturation, float saturation_max_radius):
 
         self.thisptr = <cdwa.Config*>malloc(sizeof(cdwa.Config))
         self.thisptr.maxSpeed = max_speed
@@ -114,6 +114,7 @@ cdef class Config:
         self.thisptr.yawrateResolution = yawrate_resolution
         self.thisptr.dt = dt
         self.thisptr.predictTime = predict_time
+        self.thisptr.saturationMaxRadius = saturation_max_radius
         self.thisptr.heading = heading
         self.thisptr.saturation = saturation
         self.thisptr.clearance = clearance
@@ -201,6 +202,14 @@ cdef class Config:
             assert self.thisptr is not NULL
             self.thisptr.predictTime = value
 
+    property saturation_max_radius:
+        def __get__(self):
+            assert self.thisptr is not NULL
+            return self.thisptr.saturationMaxRadius
+        def __set__(self, value):
+            assert self.thisptr is not NULL
+            self.thisptr.saturationMaxRadius = value
+
     property heading:
         def __get__(self):
             assert self.thisptr is not NULL
@@ -243,8 +252,9 @@ cdef class Config:
         string = f'{string}\nyawrateResolution      {self.thisptr.yawrateResolution}'
         string = f'{string}\ndt                     {self.thisptr.dt}'
         string = f'{string}\npredictTime            {self.thisptr.predictTime}'
+        string = f'{string}\nsaturationMaxRadius    {self.thisptr.saturationMaxRadius}'
         string = f'{string}\nheading                {self.thisptr.heading}'
-        string = f'{string}\nsaturation                {self.thisptr.saturation}'
+        string = f'{string}\nsaturation             {self.thisptr.saturation}'
         string = f'{string}\nclearance              {self.thisptr.clearance}'
         string = f'{string}\nvelocity               {self.thisptr.velocity}'
         string = f'{string}\nbase.xtop              {self.thisptr.base.xtop}'

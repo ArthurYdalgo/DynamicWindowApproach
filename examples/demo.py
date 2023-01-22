@@ -36,9 +36,9 @@ class Demo(object):
                 yawrate_resolution = np.radians(1.0),
                 dt = 0.1,
                 predict_time = 3.0,
-                heading = 0.15,
-                clearance = 1.0,
-                velocity = 1.0,
+                heading = 0.1,
+                clearance = 1.5,
+                velocity = 0.80,
                 base = self.base,
                 saturation=0.06)
 

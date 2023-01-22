@@ -14,6 +14,7 @@ cdef extern from "dwa.h":
         float yawrateResolution
         float dt
         float predictTime
+        float saturationMaxRadius
         float heading
         float saturation
         float clearance
