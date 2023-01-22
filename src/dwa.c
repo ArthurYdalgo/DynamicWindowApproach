@@ -162,6 +162,26 @@ calculateSaturationCost
   // return 1.0 / minr;
 }
 
+void * threadedPlanning(void * input){
+      float cost;
+      Velocity pVelocity;
+      Pose pPose = ((struct threadedPlanningArgs*) input)->pose;
+      pVelocity.linearVelocity = ((struct threadedPlanningArgs*) input)->dw->possibleV[((struct threadedPlanningArgs*) input)->possibleVIndex];
+      pVelocity.angularVelocity = ((struct threadedPlanningArgs*) input)->dw->possibleW[((struct threadedPlanningArgs*) input)->possibleWIndex];
+      pPose = motion(pPose, pVelocity, 
+      ((struct threadedPlanningArgs*) input)->config.predictTime);
+      cost = 
+        ((struct threadedPlanningArgs*) input)->config.velocity * calculateVelocityCost(pVelocity, ((struct threadedPlanningArgs*) input)->config) +
+        ((struct threadedPlanningArgs*) input)->config.heading * calculateHeadingCost(pPose, ((struct threadedPlanningArgs*) input)->goal) +
+        ((struct threadedPlanningArgs*) input)->config.saturation * calculateSaturationCost(((struct threadedPlanningArgs*) input)->pose, pVelocity,
+                                                  ((struct threadedPlanningArgs*) input)->saturationCloud, 
+                                                  ((struct threadedPlanningArgs*) input)->config) +
+        ((struct threadedPlanningArgs*) input)->config.clearance * calculateClearanceCost(((struct threadedPlanningArgs*) input)->pose, pVelocity,
+                                                  ((struct threadedPlanningArgs*) input)->pointCloud, 
+                                                  ((struct threadedPlanningArgs*) input)->config);
+      threadedCosts[((struct threadedPlanningArgs*) input)->thread_id] = cost;
+}
+
 Velocity
 planning(Pose pose, Velocity velocity, Point goal,
          PointCloud *pointCloud, Config config, SaturationPointCloud *saturationCloud) {
@@ -172,25 +192,46 @@ planning(Pose pose, Velocity velocity, Point goal,
   float total_cost = FLT_MAX;
   float cost;
   Velocity bestVelocity;
+  int thread_count = dw->nPossibleV * dw->nPossibleW;
+  int thread_id = 0;
+
+  pthread_t * pthreads = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
+  threadedCosts = malloc(thread_count * sizeof(float));
+  threadedPlanningArgs * threadedArgs = (threadedPlanningArgs *)malloc(thread_count * sizeof(threadedPlanningArgs));
   for (int i = 0; i < dw->nPossibleV; ++i) {
     for (int j = 0; j < dw->nPossibleW; ++j) {
-      pPose = pose;
-      pVelocity.linearVelocity = dw->possibleV[i];
-      pVelocity.angularVelocity = dw->possibleW[j];
-      pPose = motion(pPose, pVelocity, config.predictTime);
-      cost = 
-        config.velocity * calculateVelocityCost(pVelocity, config) +
-        config.heading * calculateHeadingCost(pPose, goal) +
-        config.saturation * calculateSaturationCost(pose, pVelocity,
-                                                  saturationCloud, config) +
-        config.clearance * calculateClearanceCost(pose, pVelocity,
-                                                  pointCloud, config);
-      if (cost < total_cost) {
-        total_cost = cost;
-        bestVelocity = pVelocity;
-      }
+
+      threadedArgs[thread_id].thread_id = thread_id;
+      threadedArgs[thread_id].dw = dw;
+      threadedArgs[thread_id].possibleVIndex = i;
+      threadedArgs[thread_id].possibleWIndex = j;
+      threadedArgs[thread_id].pose = pose;
+      threadedArgs[thread_id].velocity = velocity;
+      threadedArgs[thread_id].goal = goal;
+      threadedArgs[thread_id].pointCloud = pointCloud;
+      threadedArgs[thread_id].config = config;
+      threadedArgs[thread_id].saturationCloud = saturationCloud;
+
+      pthread_create(&pthreads[thread_id], NULL, threadedPlanning, &threadedArgs[thread_id]);
     }
   }
+
+  for (int t=0; t<thread_count; t++){
+    pthread_join(pthreads[t], NULL);
+  }
+
+  for (int t=0; t<thread_count; t++){
+    cost = threadedCosts[t];
+    if (cost < total_cost) {
+      total_cost = cost;
+      bestVelocity = pVelocity;
+    }
+  }
+
+  free(pthreads);
+  free(threadedCosts);
+  free(threadedArgs);
+
   freeDynamicWindow(dw);
   return bestVelocity;
 }
