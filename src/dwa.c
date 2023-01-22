@@ -158,7 +158,7 @@ calculateSaturationCost
     }
     time += config.dt;
   }
-  return closest_saturation / minr;
+  return closest_saturation * ((config.saturationMaxRadius - minr)/config.saturationMaxRadius);
   // return 1.0 / minr;
 }
 
