@@ -40,7 +40,7 @@ cdef extern from "dwa.h":
     Pose motion(Pose pose, Velocity velocity, float dt);
     Velocity planning(
         Pose pose, Velocity velocity, Point goal,
-        PointCloud *pointCloud, Config config);
+        PointCloud *pointCloud, Config config, PointCloud *saturationCloud);
     PointCloud* createPointCloud(int size);
     void freePointCloud(PointCloud* pointCloud);
     void freeDynamicWindow(DynamicWindow *dynamicWindow);

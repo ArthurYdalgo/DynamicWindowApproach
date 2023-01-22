@@ -78,10 +78,10 @@ calculateClearanceCost
 (Pose pose, Velocity velocity, PointCloud *pointCloud, Config config);
 float
 calculateSaturationCost
-(Pose pose, Velocity velocity, PointCloud *pointCloud, Config config);
+(Pose pose, Velocity velocity, PointCloud *saturationCloud, Config config);
 Velocity
 planning
-(Pose pose, Velocity velocity, Point goal, PointCloud *pointCloud, Config config);
+(Pose pose, Velocity velocity, Point goal, PointCloud *pointCloud, Config config, PointCloud *saturationCloud);
 PointCloud* createPointCloud(int size);
 void freePointCloud(PointCloud* pointCloud);
 void freeDynamicWindow(DynamicWindow *dynamicWindow);

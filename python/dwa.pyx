@@ -357,10 +357,11 @@ def motion(tuple pose, tuple velocity, float dt):
 
 def planning(tuple pose, tuple velocity, tuple goal,
              np.ndarray[np.float32_t, ndim=2] point_cloud,
-             Config config):
+             Config config, np.ndarray[np.float32_t, ndim=2] saturation_cloud):
 
     cdef float x, y, yaw, v , w, gx, gy
     cdef PointCloud _point_cloud = PointCloud(point_cloud)
+    cdef PointCloud _saturation_cloud = PointCloud(saturation_cloud)
     x, y, yaw = pose
     v, w = velocity
     gx, gy = goal
@@ -370,6 +371,6 @@ def planning(tuple pose, tuple velocity, tuple goal,
     cdef cdwa.Velocity best_velocity
     best_velocity = cdwa.planning(_pose.thisptr[0], _velocity.thisptr[0],
                                   _goal.thisptr[0], _point_cloud.thisptr,
-                                  config.thisptr[0]);
+                                  config.thisptr[0], _saturation_cloud.thisptr);
 
     return (best_velocity.linearVelocity, best_velocity.angularVelocity)

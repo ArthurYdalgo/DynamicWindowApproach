@@ -105,7 +105,7 @@ calculateClearanceCost
 
 float
 calculateSaturationCost
-(Pose pose, Velocity velocity, PointCloud *pointCloud, Config config) {
+(Pose pose, Velocity velocity, PointCloud *saturationCloud, Config config) {
   Pose pPose = pose;
   float time = 0.0;
   float minr = FLT_MAX;
@@ -119,17 +119,18 @@ calculateSaturationCost
   while (time < config.predictTime) {
     pPose = motion(pPose, velocity, config.dt);
       
-    for(int i = 0; i < pointCloud->size; ++i) {
-      dx = pPose.point.x - pointCloud->points[i].x;
-      dy = pPose.point.y - pointCloud->points[i].y;
+    for(int i = 0; i < saturationCloud->size; ++i) {
+      dx = pPose.point.x - saturationCloud->points[i].x;
+      dy = pPose.point.y - saturationCloud->points[i].y;
+      saturation = saturationCloud->points[i].s;
       x = -dx * cos(pPose.yaw) + -dy * sin(pPose.yaw);
       y = -dx * -sin(pPose.yaw) + -dy * cos(pPose.yaw);
-      if (x <= config.base.xmax &&
-          x >= config.base.xmin &&
-          y <= config.base.ymax &&
-          y >= config.base.ymin){
-        return FLT_MAX;
-      }
+      // if (x <= config.base.xmax &&
+      //     x >= config.base.xmin &&
+      //     y <= config.base.ymax &&
+      //     y >= config.base.ymin){
+      //   return FLT_MAX;
+      // }
       r = sqrtf(dx*dx + dy*dy);
       if (r < minr)
         minr = r;
@@ -141,7 +142,7 @@ calculateSaturationCost
 
 Velocity
 planning(Pose pose, Velocity velocity, Point goal,
-         PointCloud *pointCloud, Config config) {
+         PointCloud *pointCloud, Config config, PointCloud *saturationCloud) {
   DynamicWindow *dw;
   createDynamicWindow(velocity, config, &dw);
   Velocity pVelocity;
@@ -159,7 +160,7 @@ planning(Pose pose, Velocity velocity, Point goal,
         config.velocity * calculateVelocityCost(pVelocity, config) +
         config.heading * calculateHeadingCost(pPose, goal) +
         config.saturation * calculateSaturationCost(pose, pVelocity,
-                                                  pointCloud, config) +
+                                                  saturationCloud, config) +
         config.clearance * calculateClearanceCost(pose, pVelocity,
                                                   pointCloud, config);
       if (cost < total_cost) {

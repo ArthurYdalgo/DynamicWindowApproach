@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import dwa
 
+
 class Demo(object):
     def __init__(self):
         # 1 px = 0.1 m
@@ -13,9 +14,12 @@ class Demo(object):
         cv2.namedWindow('cvwindow')
         cv2.setMouseCallback('cvwindow', self.callback)
         self.drawing = False
+        self.drawing_saturation = False
 
         self.point_cloud = []
+        self.saturation_cloud = []
         self.draw_points = []
+        self.draw_saturation_points = []
 
         # Planner Settings
         self.vel = (0.0, 0.0)
@@ -35,21 +39,34 @@ class Demo(object):
                 heading = 0.15,
                 clearance = 1.0,
                 velocity = 1.0,
-                base = self.base)
+                base = self.base,
+                saturation=0.06)
 
     def callback(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             self.drawing = True
         elif event == cv2.EVENT_MOUSEMOVE:
+            if not self.drawing and not self.drawing_saturation:
+                self.goal = (x/10, y/10)
+
             if self.drawing:
                 if [x, y] not in self.draw_points:
                     self.draw_points.append([x, y])
                     self.point_cloud.append([x/10, y/10])
                     self.goal = None
-            else:
-                self.goal = (x/10, y/10)
+            if self.drawing_saturation:
+                if [x, y] not in self.draw_saturation_points:
+                    self.draw_saturation_points.append([x, y])
+                    self.saturation_cloud.append([x/10, y/10])
+                    self.goal = None
+            
         elif event == cv2.EVENT_LBUTTONUP:
             self.drawing = False
+        
+        if event == cv2.EVENT_RBUTTONDOWN:
+            self.drawing_saturation = True
+        elif event == cv2.EVENT_RBUTTONUP:
+            self.drawing_saturation = False
 
     def main(self):
         import argparse
@@ -62,16 +79,20 @@ class Demo(object):
             writer = imageio.get_writer('./dwa.gif', mode='I', duration=0.05)
         while True:
             prev_time = time.time()
-            self.map = np.zeros((600, 600, 3), dtype=np.uint8)
+            self.map = np.zeros((1200, 900, 3), dtype=np.uint8)
             for point in self.draw_points:
-                cv2.circle(self.map, tuple(point), 4, (255, 255, 255), -1)
+                cv2.circle(self.map, tuple(point), 4, (0, 255, 255, 0.5), -1)
+            for point in self.draw_saturation_points:
+                cv2.circle(self.map, tuple(point), 3, (255, 0, 0, 0.5), 1)
             if self.goal is not None:
                 cv2.circle(self.map, (int(self.goal[0]*10), int(self.goal[1]*10)),
                         4, (0, 255, 0), -1)
                 if len(self.point_cloud):
                     # Planning
+                    if(len(self.saturation_cloud) == 0):
+                        self.saturation_cloud = [[-5,-5]]
                     self.vel = dwa.planning(self.pose, self.vel, self.goal,
-                            np.array(self.point_cloud, np.float32), self.config)
+                            np.array(self.point_cloud, np.float32), self.config, np.array(self.saturation_cloud, np.float32))
                     # Simulate motion
                     self.pose = dwa.motion(self.pose, self.vel, self.config.dt)
 
@@ -108,6 +129,9 @@ class Demo(object):
             elif key == ord('r'):
                 self.point_cloud = []
                 self.draw_points = []
+            elif key == ord('b'):
+                self.saturation_cloud = []
+                self.draw_saturation_points = []
         if args.save:
             writer.close()
 
