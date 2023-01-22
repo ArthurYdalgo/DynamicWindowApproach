@@ -40,7 +40,9 @@ class Demo(object):
                 clearance = 1.5,
                 velocity = 0.80,
                 base = self.base,
-                saturation=0.06)
+                saturation=0.06,
+                saturation_max_radius = 100
+                )
 
     def callback(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -57,16 +59,21 @@ class Demo(object):
             if self.drawing_saturation:
                 if [x, y] not in self.draw_saturation_points:
                     self.draw_saturation_points.append([x, y])
-                    self.saturation_cloud.append([x/10, y/10])
+                    self.saturation_cloud.append([x/10, y/10, 1])
                     self.goal = None
             
         elif event == cv2.EVENT_LBUTTONUP:
+            print("no longer drawing")
             self.drawing = False
         
         if event == cv2.EVENT_RBUTTONDOWN:
             self.drawing_saturation = True
+            # if not self.drawing and not self.drawing_saturation:
+            #     self.goal = (x/10, y/10)
+            pass
         elif event == cv2.EVENT_RBUTTONUP:
             self.drawing_saturation = False
+            pass
 
     def main(self):
         import argparse
@@ -90,11 +97,16 @@ class Demo(object):
                 if len(self.point_cloud):
                     # Planning
                     if(len(self.saturation_cloud) == 0):
-                        self.saturation_cloud = [[-5,-5]]
+                        self.saturation_cloud = [[-5,-5, 1]]
                     self.vel = dwa.planning(self.pose, self.vel, self.goal,
-                            np.array(self.point_cloud, np.float32), self.config, np.array(self.saturation_cloud, np.float32))
+                            np.array(self.point_cloud, np.float32), self.config
+                            , np.array(self.saturation_cloud, np.float32)
+                            )
                     # Simulate motion
+                    # print("vel", self.vel)
                     self.pose = dwa.motion(self.pose, self.vel, self.config.dt)
+
+                    # print("pose", self.pose)
 
             pose = np.ndarray((3,))
             pose[0:2] = np.array(self.pose[0:2]) * 10
@@ -109,7 +121,7 @@ class Demo(object):
             height = base[3] - base[1]
             rect = ((pose[0], pose[1]), (width, height), np.degrees(pose[2]))
             box = cv2.boxPoints(rect)
-            box = np.int0(box)
+            box = np.intp(box)
             cv2.drawContours(self.map,[box],0,(0,0,255),-1)
 
             # Prevent divide by zero
@@ -125,7 +137,8 @@ class Demo(object):
             cv2.imshow('cvwindow', self.map)
             key = cv2.waitKey(1)
             if key == 27:
-                break
+                # break
+                pass
             elif key == ord('r'):
                 self.point_cloud = []
                 self.draw_points = []
@@ -137,3 +150,5 @@ class Demo(object):
 
 if __name__ == '__main__':
     Demo().main()
+
+

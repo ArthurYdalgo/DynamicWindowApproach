@@ -126,12 +126,8 @@ calculateSaturationCost
   float r;
   float dy;
 
-  float x;
-  float y;
   float saturation;
 
-  float basex = config.base.xmax - config.base.xmin;
-  float basey = config.base.ymax - config.base.ymin;
 
   while (time < config.predictTime) {
     pPose = motion(pPose, velocity, config.dt);
@@ -140,14 +136,7 @@ calculateSaturationCost
       dx = pPose.point.x - saturationCloud->saturationPoints[i].x;
       dy = pPose.point.y - saturationCloud->saturationPoints[i].y;
       saturation = saturationCloud->saturationPoints[i].saturation;
-      x = -dx * cos(pPose.yaw) + -dy * sin(pPose.yaw);
-      y = -dx * -sin(pPose.yaw) + -dy * cos(pPose.yaw);
-      // if (x <= config.base.xmax &&
-      //     x >= config.base.xmin &&
-      //     y <= config.base.ymax &&
-      //     y >= config.base.ymin){
-      //   return FLT_MAX;
-      // }
+      
       r = sqrtf(dx*dx + dy*dy);
       
       if (r < minr){
@@ -180,6 +169,7 @@ void * threadedPlanning(void * input){
                                                   ((struct threadedPlanningArgs*) input)->pointCloud, 
                                                   ((struct threadedPlanningArgs*) input)->config);
       threadedCosts[((struct threadedPlanningArgs*) input)->thread_id] = cost;
+      return NULL;
 }
 
 Velocity
@@ -187,15 +177,19 @@ planning(Pose pose, Velocity velocity, Point goal,
          PointCloud *pointCloud, Config config, SaturationPointCloud *saturationCloud) {
   DynamicWindow *dw;
   createDynamicWindow(velocity, config, &dw);
-  Velocity pVelocity;
-  Pose pPose = pose;
+  
   float total_cost = FLT_MAX;
   float cost;
   Velocity bestVelocity;
   int thread_count = dw->nPossibleV * dw->nPossibleW;
   int thread_id = 0;
+  int use_threads = 1;
 
+  
   pthread_t * pthreads = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
+  
+
+  Velocity * velocities = (Velocity*)malloc(thread_count * sizeof(Velocity));
   threadedCosts = malloc(thread_count * sizeof(float));
   threadedPlanningArgs * threadedArgs = (threadedPlanningArgs *)malloc(thread_count * sizeof(threadedPlanningArgs));
   for (int i = 0; i < dw->nPossibleV; ++i) {
@@ -211,24 +205,36 @@ planning(Pose pose, Velocity velocity, Point goal,
       threadedArgs[thread_id].pointCloud = pointCloud;
       threadedArgs[thread_id].config = config;
       threadedArgs[thread_id].saturationCloud = saturationCloud;
+      velocities[thread_id].linearVelocity = dw->possibleV[i];
+      velocities[thread_id].angularVelocity = dw->possibleW[j];
 
-      pthread_create(&pthreads[thread_id], NULL, threadedPlanning, &threadedArgs[thread_id]);
+      if(use_threads){
+        pthread_create(&pthreads[thread_id], NULL, threadedPlanning, &threadedArgs[thread_id]);
+      }else{
+        threadedPlanning(&threadedArgs[thread_id]);
+      }
+      thread_id++;
     }
   }
 
-  for (int t=0; t<thread_count; t++){
-    pthread_join(pthreads[t], NULL);
+  if(use_threads){
+    for (int t=0; t<thread_count; t++){
+      pthread_join(pthreads[t], NULL);
+    }
   }
 
   for (int t=0; t<thread_count; t++){
     cost = threadedCosts[t];
     if (cost < total_cost) {
       total_cost = cost;
-      bestVelocity = pVelocity;
+      bestVelocity = velocities[t];
     }
   }
 
-  free(pthreads);
+  if(use_threads){
+    free(pthreads);
+  }
+
   free(threadedCosts);
   free(threadedArgs);
 
