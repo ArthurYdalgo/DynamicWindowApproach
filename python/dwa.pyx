@@ -276,7 +276,7 @@ cdef class PointCloud:
 cdef class SaturationPointCloud:
     cdef cdwa.SaturationPointCloud* thisptr
 
-    def __cinit__(self, np.ndarray[np.float32_t, ndim=3] saturation_point_cloud):
+    def __cinit__(self, np.ndarray[np.float32_t, ndim=2] saturation_point_cloud):
         cdef int size = len(saturation_point_cloud)
         self.thisptr = <cdwa.SaturationPointCloud*>cdwa.createSaturationPointCloud(size)
         self.thisptr.size = size
@@ -356,7 +356,7 @@ def calculate_clearance_cost(tuple pose, tuple velocity,
                                        _point_cloud.thisptr, config.thisptr[0])
 
 def calculate_saturation_cost(tuple pose, tuple velocity,
-                             np.ndarray[np.float32_t, ndim=3] saturation_point_cloud,
+                             np.ndarray[np.float32_t, ndim=2] saturation_point_cloud,
                              Config config):
     cdef float x, y, yaw, v , w
     cdef SaturationPointCloud _saturation_point_cloud = SaturationPointCloud(saturation_point_cloud)
