@@ -1,6 +1,10 @@
 Dynamic Window Approach
 ===================================
 
+**DISCLAILMER**: This is a branched of version of the [Dynamic Window Approach](https://github.com/goktug97/DynamicWindowApproach) of [goktug97](https://github.com/goktug97). A saturation cloud was added to make it avoid getting stuck on loops, such as the example below:
+
+The mentioned saturation cloud is almost identical to the obstacles cloud, but it's a triple instead of a tuple. The third parameter is a 0-1 float. Modify the calculateSaturationCost method as you see fit.
+
 2D Dynamic Window Approach [<cite>[1]</cite>](#ref1) Motion Planning algorithm written in C with Python Bindings.
 
 ![Python Demo](https://raw.githubusercontent.com/goktug97/DynamicWindowApproach/master/dwa.gif)
@@ -119,6 +123,10 @@ While the [planning](#planning) function is the only function that a user needs
 to call for the planning, all of the functions are exposed to the user
 for both C and Python for no reasons.
 
+A pthread implementation was added, so that the windows can be calculated in parellel. This setting can be turned off if desired. 
+
+A little caveat on this: if the size of the point cloud is small enough, multithreading will make it run slower that it would be without multithreading, and will make a differente for large point cloud (be it obstacles or saturation clouds). Plus, it's required for you to have pthread.h library on your machine, regardless of wether or not if you're using it.
+
 ### Structs and Classes
 If you are using Python bindings, you don't need to use any of these
 classes except [Config](#config). The functions accept built-in or
@@ -168,6 +176,9 @@ cdef Point _goal = Point(gx, gy)
         - **clearance** - floating-point clearance cost weight
         - **velocity** - floating-point velocity cost weight
         - **base** - [Rect](#rect)
+        - **saturation** - floating-point saturation cost weight
+        - **saturation_max_radius** - if a saturation point is over this value, it'll be disconsidered
+        - **use_threads** - int (0 or 1), stating wether or not threads should be used to calculate each window.
 
 - *class* Config
 
