@@ -15,6 +15,7 @@ cdef extern from "dwa.h":
         float dt
         float predictTime
         float saturationMaxRadius
+        int useThreads
         float heading
         float saturation
         float clearance

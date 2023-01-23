@@ -102,7 +102,7 @@ cdef class Config:
                   float max_yawrate, float max_accel, float max_dyawrate,
                   float velocity_resolution, float yawrate_resolution, float dt,
                   float predict_time, float heading, float clearance, float velocity,
-                  list base, float saturation, float saturation_max_radius):
+                  list base, float saturation, float saturation_max_radius, int use_threads):
 
         self.thisptr = <cdwa.Config*>malloc(sizeof(cdwa.Config))
         self.thisptr.maxSpeed = max_speed
@@ -115,6 +115,7 @@ cdef class Config:
         self.thisptr.dt = dt
         self.thisptr.predictTime = predict_time
         self.thisptr.saturationMaxRadius = saturation_max_radius
+        self.thisptr.useThreads = use_threads
         self.thisptr.heading = heading
         self.thisptr.saturation = saturation
         self.thisptr.clearance = clearance
@@ -209,6 +210,14 @@ cdef class Config:
         def __set__(self, value):
             assert self.thisptr is not NULL
             self.thisptr.saturationMaxRadius = value
+    
+    property use_threads:
+        def __get__(self):
+            assert self.thisptr is not NULL
+            return self.thisptr.useThreads
+        def __set__(self, value):
+            assert self.thisptr is not NULL
+            self.thisptr.useThreads = value
 
     property heading:
         def __get__(self):
@@ -253,6 +262,7 @@ cdef class Config:
         string = f'{string}\ndt                     {self.thisptr.dt}'
         string = f'{string}\npredictTime            {self.thisptr.predictTime}'
         string = f'{string}\nsaturationMaxRadius    {self.thisptr.saturationMaxRadius}'
+        string = f'{string}\nuseThreads             {self.thisptr.useThreads}'
         string = f'{string}\nheading                {self.thisptr.heading}'
         string = f'{string}\nsaturation             {self.thisptr.saturation}'
         string = f'{string}\nclearance              {self.thisptr.clearance}'

@@ -182,7 +182,7 @@ planning(Pose pose, Velocity velocity, Point goal,
   Velocity bestVelocity;
   int thread_count = dw->nPossibleV * dw->nPossibleW;
   int thread_id = 0;
-  int use_threads = 1;
+  int use_threads = config.useThreads;
 
   
   pthread_t * pthreads = (pthread_t*)malloc(thread_count * sizeof(pthread_t));

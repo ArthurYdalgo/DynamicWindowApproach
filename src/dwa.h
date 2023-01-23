@@ -38,6 +38,7 @@ typedef struct
   float dt;
   float predictTime;
   float saturationMaxRadius;
+  int useThreads;
   float heading;
   float saturation;
   float clearance;
