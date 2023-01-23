@@ -41,8 +41,8 @@ class Demo(object):
                 velocity = 0.80,
                 base = self.base,
                 saturation=0.06,
-                saturation_max_radius = 100
-                )
+                saturation_max_radius = 100,
+                use_threads=1)
 
     def callback(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
