@@ -72,7 +72,7 @@ You can directly install Python bindings without compiling the library.
 ### Compile and Install C Library
 
 ```bash
-git clone https://github.com/goktug97/DynamicWindowApproach
+git clone https://github.com/ArthurYdalgo/DynamicWindowApproach
 cd DynamicWindowApproach
 mkdir build
 cd build
