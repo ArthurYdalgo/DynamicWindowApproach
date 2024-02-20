@@ -46,8 +46,6 @@ typedef struct
   Rect base;
 } Config;
 
-float *threadedCosts;
-
 typedef struct
 {
   float linearVelocity;

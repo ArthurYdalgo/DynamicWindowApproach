@@ -1,5 +1,7 @@
 #include "dwa.h"
 
+float *threadedCosts;
+
 void
 createDynamicWindow(Velocity velocity, Config config, DynamicWindow **dynamicWindow) {
   float
